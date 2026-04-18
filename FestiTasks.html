@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>⚡ FestiTasks</title>
+<style>
+  :root {
+    --primary: #6c63ff;
+    --primary-dark: #574fd6;
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #2d3748;
+    --muted: #718096;
+    --border: #e2e8f0;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* AUTH */
+  #auth-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; background: linear-gradient(135deg, #6c63ff 0%, #574fd6 100%);
+  }
+  .auth-box {
+    background: white; border-radius: 20px; padding: 40px;
+    width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .auth-box h1 { text-align: center; color: var(--primary); margin-bottom: 8px; font-size: 2rem; }
+  .auth-box p { text-align: center; color: var(--muted); margin-bottom: 28px; }
+  .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .auth-tab {
+    flex: 1; padding: 10px; border: 2px solid var(--border); background: white;
+    border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s;
+  }
+  .auth-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* LAYOUT */
+  #app { display: none; min-height: 100vh; }
+  .topbar {
+    background: white; border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 60px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar h1 { font-size: 1.3rem; color: var(--primary); }
+  .project-selector select {
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.9rem; background: var(--bg); cursor: pointer;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .user-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); padding: 6px 12px; border-radius: 20px;
+    font-size: 0.85rem; cursor: pointer;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--primary); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.8rem;
+  }
+
+  /* NAV */
+  .main-layout { display: flex; min-height: calc(100vh - 60px); }
+  .sidebar {
+    width: 220px; background: white; border-right: 1px solid var(--border);
+    padding: 16px 0; flex-shrink: 0; position: sticky; top: 60px;
+    height: calc(100vh - 60px); overflow-y: auto;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; font-size: 0.9rem;
+    transition: all 0.2s; border-left: 3px solid transparent;
+    color: var(--text);
+  }
+  .nav-item:hover { background: var(--bg); }
+  .nav-item.active { background: #f0eeff; border-left-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .nav-section { padding: 12px 20px 4px; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 28px; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { font-size: 1.6rem; color: var(--text); }
+  .page-header p { color: var(--muted); margin-top: 4px; }
+
+  /* CARDS */
+  .card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-header h3 { font-size: 1.1rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: white; border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow); text-align: center;
+  }
+  .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+  .stat-card .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { background: var(--bg); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; color: var(--muted); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbff; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .badge-todo { background: #e2e8f0; color: #4a5568; }
+  .badge-progress { background: #bee3f8; color: #2b6cb0; }
+  .badge-done { background: #c6f6d5; color: #276749; }
+  .badge-blocked { background: #fed7d7; color: #c53030; }
+  .badge-high { background: #fed7d7; color: #c53030; }
+  .badge-medium { background: #fefcbf; color: #744210; }
+  .badge-low { background: #c6f6d5; color: #276749; }
+  .badge-admin { background: #e9d8fd; color: #553c9a; }
+  .badge-teamlead { background: #bee3f8; color: #2b6cb0; }
+  .badge-uitvoerder { background: #e2e8f0; color: #4a5568; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 0.9rem; font-weight: 500; transition: all 0.2s; display: inline-flex;
+    align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #27ae60; }
+  .btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); }
+  .btn-outline:hover { background: #f0eeff; }
+  .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg); }
+
+  /* FORMS */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.9rem; transition: border 0.2s;
+    background: white; color: var(--text);
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--primary);
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 16px; padding: 28px;
+    width: 90%; max-width: 560px; max-height: 90vh;
+    overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal h3 { font-size: 1.2rem; margin-bottom: 20px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* TOAST */
+  #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 12px 20px; border-radius: 10px; color: white; font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;
+    max-width: 320px;
+  }
+  .toast-success { background: var(--success); }
+  .toast-error { background: var(--danger); }
+  .toast-info { background: var(--primary); }
+  @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* MISC */
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .tag { display: inline-block; background: var(--bg); border-radius: 6px; padding: 2px 8px; font-size: 0.78rem; margin: 2px; }
+  .flex { display: flex; }
+  .gap-2 { gap: 8px; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .text-muted { color: var(--muted); font-size: 0.85rem; }
+  .mt-2 { margin-top: 8px; }
+  .chat-box { border: 1px solid var(--border); border-radius: 10px; padding: 12px; max-height: 260px; overflow-y: auto; margin-bottom: 10px; background: var(--bg); }
+  .chat-msg { margin-bottom: 10px; }
+  .chat-msg .sender { font-weight: 600; font-size: 0.82rem; color: var(--primary); }
+  .chat-msg .time { font-size: 0.75rem; color: var(--muted); margin-left: 6px; }
+  .chat-msg .text { font-size: 0.88rem; margin-top: 2px; }
+  .spinner { border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay { display: flex; align-items: center; justify-content: center; padding: 40px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .form-row { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>⚡ FestiTasks</h1>
+    <p>Festivalbeheer op één plek</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Inloggen</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Registreren</button>
+    </div>
+    <div id="tab-login">
+      <div class="form-group">
+        <label>E-mailadres</label>
+        <input type="email" id="login-email" placeholder="jouw@email.be" />
+      </div>
+      <div class="form-group">
+        <label>Wachtwoord</label>
+        <input type="password" id="login-pass" placeholder="••••••••" />
+      </div>
+      <div id="login-error" style="color:var(--danger);font-size:0.85rem;margin-bottom:12px;display:none;"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Inloggen</button>
+    </div>
+    <div id="tab-register" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Voornaam</label>
+          <input type="text" id="reg-firstname" placeholder="Jan" />
+        </div>
+        <div class="form-group">
+          <label>Achternaam</label>
+          <input type="text" id="reg-lastname" placeholder="Janssen" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Gebruikersnaam</label>
+        <input type="text" id="reg-username" placeholder="janjanssen" />
+      </div>
+      <div class="form-group">
+        <label>E-mailadres</label>
+        <input type="email" id="reg-email" placeholder="jouw@email.be" />
+      </div>
+      <div class="form-group">
+        <label>Telefoon</label>
+        <input type="tel" id="reg-phone" placeholder="+32 ..." />
+      </div>
+      <div class="form-group">
+        <label>Wachtwoord</label>
+        <input type="password" id="reg-pass" placeholder="Min. 6 tekens" />
+      </div>
+      <div id="reg-error" style="color:var(--danger);font-size:0.85rem;margin-bottom:12px;display:none;"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="doRegister()">Account aanmaken</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>⚡ FestiTasks</h1>
+      <div class="project-selector">
+        <select id="project-select" onchange="selectProject(this.value)">
+          <option value="">— Kies project —</option>
+        </select>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge" onclick="showPage('profiel')">
+        <div class="avatar" id="topbar-avatar">?</div>
+        <span id="topbar-name">...</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Uitloggen</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="nav-section">Algemeen</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">📊 Dashboard</div>
+      <div class="nav-item" onclick="showPage('mijn-taken')" data-page="mijn-taken">✅ Mijn taken</div>
+      <div class="nav-item" onclick="showPage('algemene-taken')" data-page="algemene-taken">📢 Algemene taken</div>
+
+      <div class="nav-section">Project</div>
+      <div class="nav-item" onclick="showPage('taken')" data-page="taken">📋 Alle taken</div>
+      <div class="nav-item" onclick="showPage('materialen')" data-page="materialen">📦 Materialen</div>
+      <div class="nav-item" onclick="showPage('locaties')" data-page="locaties">📍 Locaties</div>
+      <div class="nav-item" onclick="showPage('rapporten')" data-page="rapporten">📈 Rapporten</div>
+      <div class="nav-item" onclick="showPage('aanvragen')" data-page="aanvragen">📋 Materiaalaanvragen</div>
+
+      <div class="nav-section" id="nav-admin-section" style="display:none">Beheer</div>
+      <div class="nav-item" onclick="showPage('gebruikers')" data-page="gebruikers" id="nav-gebruikers" style="display:none">👥 Gebruikers</div>
+      <div class="nav-item" onclick="showPage('projecten')" data-page="projecten" id="nav-projecten" style="display:none">🗂️ Projecten</div>
+
+      <div class="nav-section">Account</div>
+      <div class="nav-item" onclick="showPage('profiel')" data-page="profiel">👤 Profiel</div>
+      <div class="nav-item" onclick="showPage('toegang')" data-page="toegang">🔑 Toegang aanvragen</div>
+    </nav>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h2>📊 Dashboard</h2>
+          <p id="dashboard-subtitle">Overzicht van je taken en project</p>
+        </div>
+        <div class="stats-grid" id="dashboard-stats"></div>
+        <div class="card">
+          <div class="card-header"><h3>🕐 Recente taken</h3></div>
+          <div class="table-wrap"><table><thead><tr><th>Taak</th><th>Status</th><th>Prioriteit</th><th>Deadline</th></tr></thead><tbody id="dashboard-recent"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- MIJN TAKEN -->
+      <div class="page" id="page-mijn-taken">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>✅ Mijn taken</h2><p>Taken toegewezen aan jou</p></div>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table><thead><tr><th>Taak</th><th>Type</th><th>Status</th><th>Prio</th><th>Deadline</th><th>Acties</th></tr></thead><tbody id="mijn-taken-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ALGEMENE TAKEN -->
+      <div class="page" id="page-algemene-taken">
+        <div class="page-header"><h2>📢 Algemene taken</h2><p>Niet-toegewezen taken — iedereen kan aanvaarden</p></div>
+        <div class="card">
+          <div class="table-wrap"><table><thead><tr><th>Taak</th><th>Prioriteit</th><th>Deadline</th><th>Aangemaakt door</th><th>Actie</th></tr></thead><tbody id="algemene-taken-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ALLE TAKEN -->
+      <div class="page" id="page-taken">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>📋 Alle taken</h2><p>Overzicht van alle taken in dit project</p></div>
+          <button class="btn btn-primary" id="btn-nieuwe-taak" onclick="openNieuweTaak()">+ Nieuwe taak</button>
+        </div>
+        <div class="card">
+          <div style="margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;">
+            <select id="filter-status" onchange="renderTaken()" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;">
+              <option value="">Alle statussen</option>
+              <option value="todo">To do</option>
+              <option value="progress">In uitvoering</option>
+              <option value="done">Gedaan</option>
+              <option value="blocked">Geblokkeerd</option>
+            </select>
+            <select id="filter-prio" onchange="renderTaken()" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;">
+              <option value="">Alle prioriteiten</option>
+              <option value="hoog">Hoog</option>
+              <option value="medium">Medium</option>
+              <option value="laag">Laag</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Taak</th><th>Type</th><th>Status</th><th>Prio</th><th>Uitvoerders</th><th>Deadline</th><th>Acties</th></tr></thead><tbody id="taken-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- MATERIALEN -->
+      <div class="page" id="page-materialen">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>📦 Materialen</h2><p>Globale en project-specifieke materialen</p></div>
+          <button class="btn btn-primary" id="btn-nieuw-materiaal" onclick="openNieuwMateriaal()">+ Nieuw materiaal</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>🌍 Globale materialen</h3></div>
+          <div class="table-wrap"><table><thead><tr><th>Naam</th><th>Eenheid</th><th>Voorraad</th><th>Acties</th></tr></thead><tbody id="globale-materialen-body"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>📁 Project materialen</h3></div>
+          <div class="table-wrap"><table><thead><tr><th>Naam</th><th>Eenheid</th><th>Voorraad</th><th>Acties</th></tr></thead><tbody id="project-materialen-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- LOCATIES -->
+      <div class="page" id="page-locaties">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>📍 Locaties</h2><p>Locaties binnen dit project</p></div>
+          <button class="btn btn-primary" id="btn-nieuwe-locatie" onclick="openNieuweLocatie()">+ Nieuwe locatie</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table><thead><tr><th>Locatie</th><th>Aantal taken</th><th>Acties</th></tr></thead><tbody id="locaties-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- RAPPORTEN -->
+      <div class="page" id="page-rapporten">
+        <div class="page-header"><h2>📈 Rapporten</h2><p>Materiaalverbruik per locatie</p></div>
+        <div class="card" id="rapport-content">
+          <div class="empty-state"><div class="icon">📊</div><p>Selecteer een project om rapporten te zien</p></div>
+        </div>
+      </div>
+
+      <!-- MATERIAALAANVRAGEN -->
+      <div class="page" id="page-aanvragen">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>📋 Materiaalaanvragen</h2><p>Overzicht van alle aanvragen</p></div>
+          <button class="btn btn-primary" onclick="openNieuweAanvraag()">+ Nieuwe aanvraag</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table><thead><tr><th>Materiaal</th><th>Aantal</th><th>Taak</th><th>Aangevraagd door</th><th>Status</th><th>Acties</th></tr></thead><tbody id="aanvragen-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- GEBRUIKERS (admin) -->
+      <div class="page" id="page-gebruikers">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>👥 Gebruikers</h2><p>Alle geregistreerde gebruikers</p></div>
+          <button class="btn btn-primary" onclick="openNieuweGebruiker()">+ Gebruiker aanmaken</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>⏳ Openstaande toegangsverzoeken</h3></div>
+          <div class="table-wrap"><table><thead><tr><th>Gebruiker</th><th>Project</th><th>Aangevraagd op</th><th>Acties</th></tr></thead><tbody id="verzoeken-body"></tbody></table></div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><h3>Alle gebruikers</h3></div>
+          <div class="table-wrap"><table><thead><tr><th>Naam</th><th>Gebruikersnaam</th><th>E-mail</th><th>Telefoon</th><th>Rol</th><th>Acties</th></tr></thead><tbody id="gebruikers-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- PROJECTEN (admin) -->
+      <div class="page" id="page-projecten">
+        <div class="page-header flex justify-between items-center">
+          <div><h2>🗂️ Projecten beheren</h2></div>
+          <button class="btn btn-primary" onclick="openNieuwProject()">+ Nieuw project</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table><thead><tr><th>Project</th><th>Omschrijving</th><th>Leden</th><th>Taken</th><th>Acties</th></tr></thead><tbody id="projecten-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- PROFIEL -->
+      <div class="page" id="page-profiel">
+        <div class="page-header"><h2>👤 Mijn profiel</h2></div>
+        <div class="card" style="max-width:500px">
+          <div class="form-group"><label>Voornaam</label><input type="text" id="profiel-voornaam" /></div>
+          <div class="form-group"><label>Achternaam</label><input type="text" id="profiel-achternaam" /></div>
+          <div class="form-group"><label>Gebruikersnaam</label><input type="text" id="profiel-username" id="profiel-username" /></div>
+          <div class="form-group"><label>E-mail</label><input type="email" id="profiel-email" disabled /></div>
+          <div class="form-group"><label>Telefoon</label><input type="tel" id="profiel-telefoon" /></div>
+          <button class="btn btn-primary" onclick="saveProfiel()">Opslaan</button>
+          <hr />
+          <h4 style="margin-bottom:12px">🔒 Wachtwoord wijzigen</h4>
+          <div class="form-group"><label>Nieuw wachtwoord</label><input type="password" id="nieuw-ww" placeholder="Min. 6 tekens" /></div>
+          <div class="form-group"><label>Bevestig wachtwoord</label><input type="password" id="bevestig-ww" /></div>
+          <button class="btn btn-outline" onclick="changePassword()">Wachtwoord wijzigen</button>
+        </div>
+      </div>
+
+      <!-- TOEGANG AANVRAGEN -->
+      <div class="page" id="page-toegang">
+        <div class="page-header"><h2>🔑 Toegang aanvragen</h2><p>Vraag toegang aan tot een project</p></div>
+        <div class="card" style="max-width:500px">
+          <div class="form-group">
+            <label>Project</label>
+            <select id="toegang-project"></select>
+          </div>
+          <button class="btn btn-primary" onclick="vraagToegang()">Toegang aanvragen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-taak">
+  <div class="modal" style="max-width:700px">
+    <h3 id="modal-taak-title">Nieuwe taak</h3>
+    <input type="hidden" id="taak-id" />
+    <div class="form-row">
+      <div class="form-group"><label>Taaknaam *</label><input type="text" id="taak-naam" /></div>
+      <div class="form-group"><label>Type</label>
+        <select id="taak-type">
+          <option value="opbouw">Opbouw</option>
+          <option value="afbouw">Afbouw</option>
+          <option value="catering">Catering</option>
+          <option value="security">Security</option>
+          <option value="technisch">Technisch</option>
+          <option value="algemeen">Algemeen</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Beschrijving</label><textarea id="taak-beschrijving"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Prioriteit</label>
+        <select id="taak-prio">
+          <option value="hoog">Hoog</option>
+          <option value="medium">Medium</option>
+          <option value="laag">Laag</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="taak-status">
+          <option value="todo">To do</option>
+          <option value="progress">In uitvoering</option>
+          <option value="done">Gedaan</option>
+          <option value="blocked">Geblokkeerd</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Deadline</label><input type="datetime-local" id="taak-deadline" /></div>
+      <div class="form-group"><label>Locatie</label><select id="taak-locatie"><option value="">— Geen —</option></select></div>
+    </div>
+    <div class="form-group"><label>Uitvoerders</label><select id="taak-uitvoerders" multiple style="height:100px"></select><p class="text-muted mt-2">Ctrl+klik voor meerdere. Laat leeg = algemene taak.</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-taak')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveTaak()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-taak-detail">
+  <div class="modal" style="max-width:700px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 id="detail-naam">Taak detail</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-taak-detail')">✕</button>
+    </div>
+    <div id="detail-content"></div>
+    <div id="detail-chat-section" style="margin-top:16px">
+      <h4 style="margin-bottom:8px">💬 Chat</h4>
+      <div class="chat-box" id="detail-chat-box"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="chat-input" placeholder="Schrijf een bericht..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem" onkeydown="if(event.key==='Enter')sendChat()" />
+        <button class="btn btn-primary btn-sm" onclick="sendChat()">Stuur</button>
+      </div>
+    </div>
+    <div id="detail-status-section" style="margin-top:16px">
+      <h4 style="margin-bottom:8px">🔄 Status bijwerken</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <select id="detail-status-select">
+            <option value="todo">To do</option>
+            <option value="progress">In uitvoering</option>
+            <option value="done">Gedaan</option>
+            <option value="blocked">Geblokkeerd</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <input type="text" id="detail-status-reden" placeholder="Reden (optioneel)" />
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="updateTaakStatus()">Status bijwerken</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-materiaal">
+  <div class="modal">
+    <h3 id="modal-mat-title">Nieuw materiaal</h3>
+    <input type="hidden" id="mat-id" />
+    <input type="hidden" id="mat-scope" value="globaal" />
+    <div class="form-group"><label>Naam *</label><input type="text" id="mat-naam" /></div>
+    <div class="form-row">
+      <div class="form-group"><label>Eenheid</label><input type="text" id="mat-eenheid" placeholder="stuk, meter, kg..." /></div>
+      <div class="form-group"><label>Voorraad</label><input type="number" id="mat-voorraad" value="0" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-materiaal')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveMateriaal()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-locatie">
+  <div class="modal">
+    <h3>Nieuwe locatie</h3>
+    <input type="hidden" id="loc-id" />
+    <div class="form-group"><label>Naam *</label><input type="text" id="loc-naam" /></div>
+    <div class="form-group"><label>Beschrijving</label><textarea id="loc-beschrijving"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-locatie')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveLocatie()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-project">
+  <div class="modal">
+    <h3 id="modal-proj-title">Nieuw project</h3>
+    <input type="hidden" id="proj-id" />
+    <div class="form-group"><label>Naam *</label><input type="text" id="proj-naam" /></div>
+    <div class="form-group"><label>Omschrijving</label><textarea id="proj-beschrijving"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-project')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveProject()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-gebruiker">
+  <div class="modal">
+    <h3>Gebruiker aanmaken</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Voornaam</label><input type="text" id="new-user-firstname" /></div>
+      <div class="form-group"><label>Achternaam</label><input type="text" id="new-user-lastname" /></div>
+    </div>
+    <div class="form-group"><label>Gebruikersnaam</label><input type="text" id="new-user-username" /></div>
+    <div class="form-group"><label>E-mail</label><input type="email" id="new-user-email" /></div>
+    <div class="form-group"><label>Telefoon</label><input type="tel" id="new-user-phone" /></div>
+    <div class="form-group"><label>Tijdelijk wachtwoord</label><input type="text" id="new-user-pass" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-gebruiker')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveNieuweGebruiker()">Aanmaken</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-aanvraag">
+  <div class="modal">
+    <h3>Nieuwe materiaalaanvraag</h3>
+    <div class="form-group"><label>Materiaal *</label><input type="text" id="aanvraag-materiaal" placeholder="Naam van het materiaal" /></div>
+    <div class="form-group"><label>Aantal *</label><input type="number" id="aanvraag-aantal" min="1" value="1" /></div>
+    <div class="form-group"><label>Taak (optioneel)</label><select id="aanvraag-taak"><option value="">— Geen taak —</option></select></div>
+    <div class="form-group"><label>Opmerking</label><textarea id="aanvraag-opmerking" placeholder="Extra info..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-aanvraag')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveAanvraag()">Aanvraag indienen</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+import { initializeApp } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js)";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js)";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, Timestamp } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js)";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA28m6H015wiXXQMyMc4NgEKaHhInjU7Mg",
+  authDomain: "festitasks.firebaseapp.com",
+  projectId: "festitasks",
+  storageBucket: "festitasks.firebasestorage.app",
+  messagingSenderId: "526991108430",
+  appId: "1:526991108430:web:7270089980d5b554cb961f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentUser = null;
+let currentUserDoc = null;
+let currentProjectId = null;
+let currentProjectDoc = null;
+let allUsers = {};
+let currentDetailTaskId = null;
+let chatUnsubscribe = null;
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+window.switchAuthTab = (tab) => {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('tab-login').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('tab-register').style.display = tab==='register' ? '' : 'none';
+};
+
+window.doLogin = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    errEl.textContent = 'Ongeldige gegevens. Controleer je e-mail en wachtwoord.';
+    errEl.style.display = 'block';
+  }
+};
+
+window.doRegister = async () => {
+  const firstname = document.getElementById('reg-firstname').value.trim();
+  const lastname = document.getElementById('reg-lastname').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-error');
+  errEl.style.display = 'none';
+  if (!firstname || !lastname || !username || !email || !pass) {
+    errEl.textContent = 'Vul alle verplichte velden in.'; errEl.style.display = 'block'; return;
+  }
+  if (pass.length < 6) {
+    errEl.textContent = 'Wachtwoord moet minstens 6 tekens zijn.'; errEl.style.display = 'block'; return;
+  }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    // Check if first user → admin
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const isFirst = usersSnap.size === 0;
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      firstname, lastname, username, email, phone,
+      role: isFirst ? 'admin' : 'uitvoerder',
+      projectIds: [],
+      createdAt: serverTimestamp()
+    });
+    showToast('Account aangemaakt!', 'success');
+  } catch(e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  }
+};
+
+window.doLogout = async () => {
+  await signOut(auth);
+  currentUser = null; currentUserDoc = null; currentProjectId = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    await loadUserDoc();
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await init();
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+async function loadUserDoc() {
+  const snap = await getDoc(doc(db, 'users', currentUser.uid));
+  if (snap.exists()) currentUserDoc = { id: snap.id, ...snap.data() };
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function init() {
+  await loadAllUsers();
+  updateTopbar();
+  updateNav();
+  await loadProjects();
+  renderDashboard();
+}
+
+function updateTopbar() {
+  if (!currentUserDoc) return;
+  const name = `${currentUserDoc.firstname} ${currentUserDoc.lastname}`;
+  document.getElementById('topbar-name').textContent = name;
+  document.getElementById('topbar-avatar').textContent = (currentUserDoc.firstname[0]||'?').toUpperCase();
+}
+
+function updateNav() {
+  if (!currentUserDoc) return;
+  const isAdmin = currentUserDoc.role === 'admin';
+  const isLead = currentUserDoc.role === 'teamlead' || isAdmin;
+  document.getElementById('nav-admin-section').style.display = isAdmin ? '' : 'none';
+  document.getElementById('nav-gebruikers').style.display = isAdmin ? '' : 'none';
+  document.getElementById('nav-projecten').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btn-nieuwe-taak').style.display = isLead ? '' : 'none';
+}
+
+async function loadAllUsers() {
+  const snap = await getDocs(collection(db, 'users'));
+  allUsers = {};
+  snap.forEach(d => allUsers[d.id] = { id: d.id, ...d.data() });
+}
+
+// ─── PROJECTS ─────────────────────────────────────────────────────────────────
+async function loadProjects() {
+  const sel = document.getElementById('project-select');
+  sel.innerHTML = '<option value="">— Kies project —</option>';
+  const snap = await getDocs(collection(db, 'projects'));
+  const isAdmin = currentUserDoc?.role === 'admin';
+  snap.forEach(d => {
+    const p = d.data();
+    const isMember = p.memberIds?.includes(currentUser.uid) || isAdmin;
+    if (isMember) {
+      const opt = document.createElement('option');
+      opt.value = d.id; opt.textContent = p.naam;
+      sel.appendChild(opt);
+    }
+  });
+  // Load toegang dropdown
+  const toegangSel = document.getElementById('toegang-project');
+  toegangSel.innerHTML = '';
+  snap.forEach(d => {
+    const p = d.data();
+    const isMember = p.memberIds?.includes(currentUser.uid);
+    if (!isMember) {
+      const opt = document.createElement('option');
+      opt.value = d.id; opt.textContent = p.naam;
+      toegangSel.appendChild(opt);
+    }
+  });
+}
+
+window.selectProject = async (id) => {
+  currentProjectId = id || null;
+  if (!id) { currentProjectDoc = null; renderDashboard(); return; }
+  const snap = await getDoc(doc(db, 'projects', id));
+  currentProjectDoc = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  renderDashboard();
+  renderTaken();
+  renderMaterialen();
+  renderLocaties();
+  renderRapporten();
+  renderAanvragen();
+};
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+async function renderDashboard() {
+  const statsEl = document.getElementById('dashboard-stats');
+  const recentEl = document.getElementById('dashboard-recent');
+  if (!currentProjectId) {
+    statsEl.innerHTML = '<div class="empty-state"><div class="icon">📂</div><p>Kies een project om te beginnen</p></div>';
+    recentEl.innerHTML = '';
+    return;
+  }
+  const takenSnap = await getDocs(query(collection(db, 'tasks'), where('projectId','==',currentProjectId)));
+  const tasks = takenSnap.docs.map(d => ({id:d.id,...d.data()}));
+  const mine = tasks.filter(t => t.assigneeIds?.includes(currentUser.uid));
+  const todo = tasks.filter(t => t.status==='todo').length;
+  const progress = tasks.filter(t => t.status==='progress').length;
+  const done = tasks.filter(t => t.status==='done').length;
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${tasks.length}</div><div class="stat-label">Totaal taken</div></div>
+    <div class="stat-card"><div class="stat-value">${todo}</div><div class="stat-label">To do</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--warning)">${progress}</div><div class="stat-label">In uitvoering</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success)">${done}</div><div class="stat-label">Gedaan</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--primary)">${mine.length}</div><div class="stat-label">Mijn taken</div></div>
+  `;
+  const recent = tasks.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+  recentEl.innerHTML = recent.map(t => `
+    <tr><td>${t.naam}</td><td>${statusBadge(t.status)}</td><td>${prioBadge(t.prioriteit)}</td><td>${formatDate(t.deadline)}</td></tr>
+  `).join('') || '<tr><td colspan="4" class="empty-state">Geen taken</td></tr>';
+}
+
+// ─── TAKEN ────────────────────────────────────────────────────────────────────
+async function renderTaken() {
+  if (!currentProjectId) return;
+  const filterStatus = document.getElementById('filter-status')?.value || '';
+  const filterPrio = document.getElementById('filter-prio')?.value || '';
+  const snap = await getDocs(query(collection(db, 'tasks'), where('projectId','==',currentProjectId)));
+  let tasks = snap.docs.map(d => ({id:d.id,...d.data()}));
+  if (filterStatus) tasks = tasks.filter(t => t.status===filterStatus);
+  if (filterPrio) tasks = tasks.filter(t => t.prioriteit===filterPrio);
+  const isLead = currentUserDoc?.role==='teamlead'||currentUserDoc?.role==='admin';
+  const body = document.getElementById('taken-body');
+  body.innerHTML = tasks.map(t => {
+    const uitvoerders = (t.assigneeIds||[]).map(id => allUsers[id] ? `<span class="tag">${allUsers[id].firstname} ${allUsers[id].lastname}</span>` : '').join('');
+    return `<tr>
+      <td><strong>${t.naam}</strong><br><span class="text-muted">${t.beschrijving||''}</span></td>
+      <td><span class="tag">${t.type||''}</span></td>
+      <td>${statusBadge(t.status)}</td>
+      <td>${prioBadge(t.prioriteit)}</td>
+      <td>${uitvoerders||'<span class="text-muted">Niemand</span>'}</td>
+      <td>${formatDate(t.deadline)}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="openTaakDetail('${t.id}')">👁️</button>
+        ${isLead ? `<button class="btn btn-sm btn-ghost" onclick="openEditTaak('${t.id}')">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteTaak('${t.id}')">🗑️</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty-state">Geen taken gevonden</td></tr>';
+
+  // Mijn taken
+  const mine = snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.assigneeIds?.includes(currentUser.uid));
+  document.getElementById('mijn-taken-body').innerHTML = mine.map(t => `
+    <tr>
+      <td><strong>${t.naam}</strong></td>
+      <td><span class="tag">${t.type||''}</span></td>
+      <td>${statusBadge(t.status)}</td>
+      <td>${prioBadge(t.prioriteit)}</td>
+      <td>${formatDate(t.deadline)}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="openTaakDetail('${t.id}')">👁️ Detail</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" class="empty-state">Geen taken toegewezen aan jou</td></tr>';
+
+  // Algemene taken
+  const algemeen = snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>!t.assigneeIds||t.assigneeIds.length===0);
+  document.getElementById('algemene-taken-body').innerHTML = algemeen.map(t => `
+    <tr>
+      <td><strong>${t.naam}</strong></td>
+      <td>${prioBadge(t.prioriteit)}</td>
+      <td>${formatDate(t.deadline)}</td>
+      <td>${allUsers[t.aangemaaktop]?.firstname || '—'}</td>
+      <td><button class="btn btn-sm btn-success" onclick="aanvaardTaak('${t.id}')">✅ Aanvaarden</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="empty-state">Geen algemene taken</td></tr>';
+
+  // Aanvraag taak select
+  const aanvraagSel = document.getElementById('aanvraag-taak');
+  aanvraagSel.innerHTML = '<option value="">— Geen taak —</option>';
+  tasks.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.naam;
+    aanvraagSel.appendChild(opt);
+  });
+
+  // Taak locatie select in modal
+  await fillLocatieSelect();
+  await fillUitvoerdersSelect();
+}
+
+async function fillLocatieSelect() {
+  if (!currentProjectId) return;
+  const sel = document.getElementById('taak-locatie');
+  sel.innerHTML = '<option value="">— Geen —</option>';
+  const snap = await getDocs(query(collection(db,'locations'),where('projectId','==',currentProjectId)));
+  snap.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id; opt.textContent = d.data().naam;
+    sel.appendChild(opt);
+  });
+}
+
+async function fillUitvoerdersSelect() {
+  if (!currentProjectId) return;
+  const projSnap = await getDoc(doc(db,'projects',currentProjectId));
+  const memberIds = projSnap.data()?.memberIds || [];
+  const sel = document.getElementById('taak-uitvoerders');
+  sel.innerHTML = '';
+  memberIds.forEach(uid => {
+    if (allUsers[uid]) {
+      const opt = document.createElement('option');
+      opt.value = uid;
+      opt.textContent = `${allUsers[uid].firstname} ${allUsers[uid].lastname}`;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+window.openNieuweTaak = async () => {
+  document.getElementById('taak-id').value = '';
+  document.getElementById('taak-naam').value = '';
+  document.getElementById('taak-beschrijving').value = '';
+  document.getElementById('taak-type').value = 'algemeen';
+  document.getElementById('taak-prio').value = 'medium';
+  document.getElementById('taak-status').value = 'todo';
+  document.getElementById('taak-deadline').value = '';
+  document.getElementById('modal-taak-title').textContent = 'Nieuwe taak';
+  await fillLocatieSelect();
+  await fillUitvoerdersSelect();
+  openModal('modal-taak');
+};
+
+window.openEditTaak = async (id) => {
+  const snap = await getDoc(doc(db,'tasks',id));
+  if (!snap.exists()) return;
+  const t = snap.data();
+  document.getElementById('taak-id').value = id;
+  document.getElementById('taak-naam').value = t.naam||'';
+  document.getElementById('taak-beschrijving').value = t.beschrijving||'';
+  document.getElementById('taak-type').value = t.type||'algemeen';
+  document.getElementById('taak-prio').value = t.prioriteit||'medium';
+  document.getElementById('taak-status').value = t.status||'todo';
+  document.getElementById('taak-deadline').value = t.deadline ? new Date(t.deadline.seconds*1000).toISOString().slice(0,16) : '';
+  document.getElementById('modal-taak-title').textContent = 'Taak bewerken';
+  await fillLocatieSelect();
+  await fillUitvoerdersSelect();
+  // Set locatie
+  document.getElementById('taak-locatie').value = t.locatieId||'';
+  // Set uitvoerders
+  const sel = document.getElementById('taak-uitvoerders');
+  Array.from(sel.options).forEach(o => o.selected = (t.assigneeIds||[]).includes(o.value));
+  openModal('modal-taak');
+};
+
+window.saveTaak = async () => {
+  const id = document.getElementById('taak-id').value;
+  const naam = document.getElementById('taak-naam').value.trim();
+  if (!naam) { showToast('Naam is verplicht','error'); return; }
+  const sel = document.getElementById('taak-uitvoerders');
+  const assigneeIds = Array.from(sel.selectedOptions).map(o=>o.value);
+  const deadlineVal = document.getElementById('taak-deadline').value;
+  const data = {
+    naam,
+    beschrijving: document.getElementById('taak-beschrijving').value,
+    type: document.getElementById('taak-type').value,
+    prioriteit: document.getElementById('taak-prio').value,
+    status: document.getElementById('taak-status').value,
+    locatieId: document.getElementById('taak-locatie').value || null,
+    assigneeIds,
+    projectId: currentProjectId,
+    aangemaaktop: currentUser.uid,
+    updatedAt: serverTimestamp()
+  };
+  if (deadlineVal) data.deadline = Timestamp.fromDate(new Date(deadlineVal));
+  if (id) {
+    await updateDoc(doc(db,'tasks',id), data);
+    showToast('Taak bijgewerkt','success');
+  } else {
+    data.createdAt = serverTimestamp();
+    await addDoc(collection(db,'tasks'), data);
+    showToast('Taak aangemaakt','success');
+  }
+  closeModal('modal-taak');
+  renderTaken();
+  renderDashboard();
+};
+
+window.deleteTaak = async (id) => {
+  if (!confirm('Taak verwijderen?')) return;
+  await deleteDoc(doc(db,'tasks',id));
+  showToast('Taak verwijderd','info');
+  renderTaken(); renderDashboard();
+};
+
+window.aanvaardTaak = async (id) => {
+  const snap = await getDoc(doc(db,'tasks',id));
+  if (!snap.exists()) return;
+  const ids = snap.data().assigneeIds || [];
+  if (!ids.includes(currentUser.uid)) ids.push(currentUser.uid);
+  await updateDoc(doc(db,'tasks',id), { assigneeIds: ids });
+  showToast('Taak aanvaard!','success');
+  renderTaken();
+};
+
+window.openTaakDetail = async (id) => {
+  currentDetailTaskId = id;
+  const snap = await getDoc(doc(db,'tasks',id));
+  if (!snap.exists()) return;
+  const t = { id: snap.id, ...snap.data() };
+  document.getElementById('detail-naam').textContent = t.naam;
+  const uitvoerders = (t.assigneeIds||[]).map(uid => allUsers[uid] ? `${allUsers[uid].firstname} ${allUsers[uid].lastname}` : uid).join(', ') || 'Niemand';
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div><strong>Status:</strong> ${statusBadge(t.status)}</div>
+      <div><strong>Prioriteit:</strong> ${prioBadge(t.prioriteit)}</div>
+      <div><strong>Type:</strong> <span class="tag">${t.type||'—'}</span></div>
+      <div><strong>Deadline:</strong> ${formatDate(t.deadline)}</div>
+      <div><strong>Uitvoerders:</strong> ${uitvoerders}</div>
+    </div>
+    <div><strong>Beschrijving:</strong><p style="margin-top:4px;color:var(--muted)">${t.beschrijving||'—'}</p></div>
+  `;
+  document.getElementById('detail-status-select').value = t.status||'todo';
+  // Load chat
+  if (chatUnsubscribe) chatUnsubscribe();
+  const chatBox = document.getElementById('detail-chat-box');
+  chatBox.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  chatUnsubscribe = onSnapshot(
+    query(collection(db,'tasks',id,'chat'), orderBy('createdAt','asc')),
+    snap => {
+      chatBox.innerHTML = snap.docs.map(d => {
+        const m = d.data();
+        const user = allUsers[m.userId];
+        return `<div class="chat-msg">
+          <span class="sender">${user ? user.firstname+' '+user.lastname : 'Onbekend'}</span>
+          <span class="time">${m.createdAt ? new Date(m.createdAt.seconds*1000).toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'}) : ''}</span>
+          <div class="text">${m.tekst}</div>
+        </div>`;
+      }).join('') || '<p class="text-muted">Nog geen berichten</p>';
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  );
+  openModal('modal-taak-detail');
+};
+
+window.sendChat = async () => {
+  const inp = document.getElementById('chat-input');
+  const tekst = inp.value.trim();
+  if (!tekst || !currentDetailTaskId) return;
+  await addDoc(collection(db,'tasks',currentDetailTaskId,'chat'), {
+    tekst, userId: currentUser.uid, createdAt: serverTimestamp()
+  });
+  inp.value = '';
+};
+
+window.updateTaakStatus = async () => {
+  const status = document.getElementById('detail-status-select').value;
+  const reden = document.getElementById('detail-status-reden').value;
+  await updateDoc(doc(db,'tasks',currentDetailTaskId), { status, statusReden: reden, updatedAt: serverTimestamp() });
+  showToast('Status bijgewerkt','success');
+  renderTaken(); renderDashboard();
+};
+
+// ─── MATERIALEN ───────────────────────────────────────────────────────────────
+async function renderMaterialen() {
+  if (!currentProjectId) return;
+  // Globale materialen
+  const globSnap = await getDocs(query(collection(db,'materials'),where('scope','==','globaal')));
+  const isLead = currentUserDoc?.role==='teamlead'||currentUserDoc?.role==='admin';
+  document.getElementById('globale-materialen-body').innerHTML = globSnap.docs.map(d => {
+    const m = { id:d.id, ...d.data() };
+    return `<tr>
+      <td>${m.naam}</td><td>${m.eenheid||'—'}</td><td>${m.voorraad??0}</td>
+      <td>${isLead ? `<button class="btn btn-sm btn-ghost" onclick="openEditMateriaal('${m.id}','globaal')">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteMateriaal('${m.id}')">🗑️</button>` : '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" class="empty-state">Geen globale materialen</td></tr>';
+
+  // Project materialen
+  const projSnap = await getDocs(query(collection(db,'materials'),where('scope','==','project'),where('projectId','==',currentProjectId)));
+  document.getElementById('project-materialen-body').innerHTML = projSnap.docs.map(d => {
+    const m = { id:d.id, ...d.data() };
+    return `<tr>
+      <td>${m.naam}</td><td>${m.eenheid||'—'}</td><td>${m.voorraad??0}</td>
+      <td>${isLead ? `<button class="btn btn-sm btn-ghost" onclick="openEditMateriaal('${m.id}','project')">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteMateriaal('${m.id}')">🗑️</button>` : '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" class="empty-state">Geen project materialen</td></tr>';
+
+  document.getElementById('btn-nieuw-materiaal').style.display = isLead ? '' : 'none';
+}
+
+window.openNieuwMateriaal = () => {
+  document.getElementById('mat-id').value = '';
+  document.getElementById('mat-naam').value = '';
+  document.getElementById('mat-eenheid').value = '';
+  document.getElementById('mat-voorraad').value = '0';
+  document.getElementById('mat-scope').value = currentProjectId ? 'project' : 'globaal';
+  document.getElementById('modal-mat-title').textContent = 'Nieuw materiaal';
+  openModal('modal-materiaal');
+};
+
+window.openEditMateriaal = async (id, scope) => {
+  const snap = await getDoc(doc(db,'materials',id));
+  if (!snap.exists()) return;
+  const m = snap.data();
+  document.getElementById('mat-id').value = id;
+  document.getElementById('mat-naam').value = m.naam||'';
+  document.getElementById('mat-eenheid').value = m.eenheid||'';
+  document.getElementById('mat-voorraad').value = m.voorraad||0;
+  document.getElementById('mat-scope').value = scope;
+  document.getElementById('modal-mat-title').textContent = 'Materiaal bewerken';
+  openModal('modal-materiaal');
+};
+
+window.saveMateriaal = async () => {
+  const id = document.getElementById('mat-id').value;
+  const naam = document.getElementById('mat-naam').value.trim();
+  if (!naam) { showToast('Naam is verplicht','error'); return; }
+  const scope = document.getElementById('mat-scope').value;
+  const data = {
+    naam, eenheid: document.getElementById('mat-eenheid').value,
+    voorraad: parseInt(document.getElementById('mat-voorraad').value)||0,
+    scope, updatedAt: serverTimestamp()
+  };
+  if (scope==='project') data.projectId = currentProjectId;
+  if (id) { await updateDoc(doc(db,'materials',id),data); showToast('Bijgewerkt','success'); }
+  else { data.createdAt = serverTimestamp(); await addDoc(collection(db,'materials'),data); showToast('Aangemaakt','success'); }
+  closeModal('modal-materiaal');
+  renderMaterialen();
+};
+
+window.deleteMateriaal = async (id) => {
+  if (!confirm('Materiaal verwijderen?')) return;
+  await deleteDoc(doc(db,'materials',id));
+  showToast('Verwijderd','info');
+  renderMaterialen();
+};
+
+// ─── LOCATIES ─────────────────────────────────────────────────────────────────
+async function renderLocaties() {
+  if (!currentProjectId) return;
+  const snap = await getDocs(query(collection(db,'locations'),where('projectId','==',currentProjectId)));
+  const takenSnap = await getDocs(query(collection(db,'tasks'),where('projectId','==',currentProjectId)));
+  const tasks = takenSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const isLead = currentUserDoc?.role==='teamlead'||currentUserDoc?.role==='admin';
+  document.getElementById('locaties-body').innerHTML = snap.docs.map(d => {
+    const l = { id:d.id, ...d.data() };
+    const taskCount = tasks.filter(t=>t.locatieId===l.id).length;
+    return `<tr>
+      <td><strong>${l.naam}</strong><br><span class="text-muted">${l.beschrijving||''}</span></td>
+      <td>${taskCount}</td>
+      <td>${isLead ? `<button class="btn btn-sm btn-danger" onclick="deleteLocatie('${l.id}')">🗑️</button>` : '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="3" class="empty-state">Geen locaties</td></tr>';
+  document.getElementById('btn-nieuwe-locatie').style.display = isLead ? '' : 'none';
+}
+
+window.openNieuweLocatie = () => {
+  document.getElementById('loc-id').value = '';
+  document.getElementById('loc-naam').value = '';
+  document.getElementById('loc-beschrijving').value = '';
+  openModal('modal-locatie');
+};
+
+window.saveLocatie = async () => {
+  const naam = document.getElementById('loc-naam').value.trim();
+  if (!naam) { showToast('Naam is verplicht','error'); return; }
+  await addDoc(collection(db,'locations'), {
+    naam, beschrijving: document.getElementById('loc-beschrijving').value,
+    projectId: currentProjectId, createdAt: serverTimestamp()
+  });
+  showToast('Locatie aangemaakt','success');
+  closeModal('modal-locatie');
+  renderLocaties();
+};
+
+window.deleteLocatie = async (id) => {
+  if (!confirm('Locatie verwijderen?')) return;
+  await deleteDoc(doc(db,'locations',id));
+  showToast('Verwijderd','info');
+  renderLocaties();
+};
+
+// ─── RAPPORTEN ────────────────────────────────────────────────────────────────
+async function renderRapporten() {
+  if (!currentProjectId) return;
+  const locSnap = await getDocs(query(collection(db,'locations'),where('projectId','==',currentProjectId)));
+  const takenSnap = await getDocs(query(collection(db,'tasks'),where('projectId','==',currentProjectId)));
+  const tasks = takenSnap.docs.map(d=>({id:d.id,...d.data()}));
+  let html = '';
+  locSnap.forEach(d => {
+    const l = d.data();
+    const locTasks = tasks.filter(t=>t.locatieId===d.id);
+    html += `<h4>${l.naam}</h4><p class="text-muted">${locTasks.length} taken</p>`;
+    if (locTasks.length) {
+      html += `<ul style="margin:8px 0 16px 20px">${locTasks.map(t=>`<li>${t.naam} — ${statusBadge(t.status)}</li>`).join('')}</ul>`;
+    }
+  });
+  document.getElementById('rapport-content').innerHTML = html || '<div class="empty-state"><p>Geen locaties in dit project</p></div>';
+}
+
+// ─── AANVRAGEN ────────────────────────────────────────────────────────────────
+async function renderAanvragen() {
+  if (!currentProjectId) return;
+  const snap = await getDocs(query(collection(db,'requests'),where('projectId','==',currentProjectId)));
+  const isLead = currentUserDoc?.role==='teamlead'||currentUserDoc?.role==='admin';
+  document.getElementById('aanvragen-body').innerHTML = snap.docs.map(d => {
+    const r = { id:d.id,...d.data() };
+    const requester = allUsers[r.userId];
+    return `<tr>
+      <td>${r.materiaal}</td>
+      <td>${r.aantal}</td>
+      <td>${r.taakId ? '✓' : '—'}</td>
+      <td>${requester ? requester.firstname+' '+requester.lastname : '—'}</td>
+      <td><span class="badge badge-${r.status==='besteld'?'done':'todo'}">${r.status||'open'}</span></td>
+      <td>${isLead && r.status!=='besteld' ? `<button class="btn btn-sm btn-success" onclick="markeerBesteld('${r.id}')">✅ Besteld</button>` : ''}
+      <button class="btn btn-sm btn-danger" onclick="deleteAanvraag('${r.id}')">🗑️</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty-state">Geen aanvragen</td></tr>';
+}
+
+window.openNieuweAanvraag = () => openModal('modal-aanvraag');
+
+window.saveAanvraag = async () => {
+  const materiaal = document.getElementById('aanvraag-materiaal').value.trim();
+  const aantal = parseInt(document.getElementById('aanvraag-aantal').value)||1;
+  if (!materiaal) { showToast('Materiaal is verplicht','error'); return; }
+  await addDoc(collection(db,'requests'), {
+    materiaal, aantal,
+    taakId: document.getElementById('aanvraag-taak').value || null,
+    opmerking: document.getElementById('aanvraag-opmerking').value,
+    projectId: currentProjectId, userId: currentUser.uid,
+    status: 'open', createdAt: serverTimestamp()
+  });
+  showToast('Aanvraag ingediend','success');
+  closeModal('modal-aanvraag');
+  renderAanvragen();
+};
+
+window.markeerBesteld = async (id) => {
+  await updateDoc(doc(db,'requests',id), { status:'besteld', updatedAt: serverTimestamp() });
+  showToast('Gemarkeerd als besteld','success');
+  renderAanvragen();
+};
+
+window.deleteAanvraag = async (id) => {
+  if (!confirm('Aanvraag verwijderen?')) return;
+  await deleteDoc(doc(db,'requests',id));
+  showToast('Verwijderd','info');
+  renderAanvragen();
+};
+
+// ─── GEBRUIKERS (admin) ───────────────────────────────────────────────────────
+async function renderGebruikers() {
+  await loadAllUsers();
+  const users = Object.values(allUsers);
+  document.getElementById('gebruikers-body').innerHTML = users.map(u => `
+    <tr>
+      <td>${u.firstname} ${u.lastname}</td>
+      <td>${u.username||'—'}</td>
+      <td>${u.email}</td>
+      <td>${u.phone||'—'}</td>
+      <td>${rolBadge(u.role)}</td>
+      <td>
+        <select class="btn btn-ghost btn-sm" onchange="changeRole('${u.id}',this.value)" style="padding:4px 8px">
+          <option value="uitvoerder" ${u.role==='uitvoerder'?'selected':''}>Uitvoerder</option>
+          <option value="teamlead" ${u.role==='teamlead'?'selected':''}>Teamlead</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+        </select>
+        <button class="btn btn-sm btn-danger" onclick="deleteGebruiker('${u.id}')">🗑️</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" class="empty-state">Geen gebruikers</td></tr>';
+
+  // Toegangsverzoeken
+  const snap = await getDocs(query(collection(db,'accessRequests'),where('status','==','open')));
+  document.getElementById('verzoeken-body').innerHTML = snap.docs.map(d => {
+    const r = { id:d.id,...d.data() };
+    const u = allUsers[r.userId];
+    return `<tr>
+      <td>${u ? u.firstname+' '+u.lastname : r.userId}</td>
+      <td>${r.projectNaam||r.projectId}</td>
+      <td>${r.createdAt ? new Date(r.createdAt.seconds*1000).toLocaleDateString('nl-BE') : '—'}</td>
+      <td>
+        <button class="btn btn-sm btn-success" onclick="keurGoed('${r.id}','${r.userId}','${r.projectId}')">✅ Goedkeuren</button>
+        <button class="btn btn-sm btn-danger" onclick="keurAf('${r.id}')">❌ Afwijzen</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" class="empty-state">Geen openstaande verzoeken</td></tr>';
+}
+
+window.changeRole = async (uid, role) => {
+  await updateDoc(doc(db,'users',uid), { role });
+  showToast('Rol bijgewerkt','success');
+  loadAllUsers();
+};
+
+window.deleteGebruiker = async (uid) => {
+  if (!confirm('Gebruiker verwijderen?')) return;
+  await deleteDoc(doc(db,'users',uid));
+  showToast('Gebruiker verwijderd','info');
+  renderGebruikers();
+};
+
+window.openNieuweGebruiker = () => openModal('modal-gebruiker');
+
+window.saveNieuweGebruiker = async () => {
+  const email = document.getElementById('new-user-email').value.trim();
+  const pass = document.getElementById('new-user-pass').value;
+  if (!email || !pass) { showToast('E-mail en wachtwoord zijn verplicht','error'); return; }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db,'users',cred.user.uid), {
+      firstname: document.getElementById('new-user-firstname').value.trim(),
+      lastname: document.getElementById('new-user-lastname').value.trim(),
+      username: document.getElementById('new-user-username').value.trim(),
+      email, phone: document.getElementById('new-user-phone').value.trim(),
+      role: 'uitvoerder', projectIds: [], createdAt: serverTimestamp()
+    });
+    showToast('Gebruiker aangemaakt','success');
+    closeModal('modal-gebruiker');
+    renderGebruikers();
+  } catch(e) { showToast(e.message,'error'); }
+};
+
+window.keurGoed = async (reqId, userId, projectId) => {
+  const projSnap = await getDoc(doc(db,'projects',projectId));
+  if (!projSnap.exists()) return;
+  const memberIds = projSnap.data().memberIds || [];
+  if (!memberIds.includes(userId)) memberIds.push(userId);
+  await updateDoc(doc(db,'projects',projectId), { memberIds });
+  await updateDoc(doc(db,'accessRequests',reqId), { status:'goedgekeurd' });
+  showToast('Toegang verleend','success');
+  renderGebruikers();
+};
+
+window.keurAf = async (id) => {
+  await updateDoc(doc(db,'accessRequests',id), { status:'afgewezen' });
+  showToast('Verzoek afgewezen','info');
+  renderGebruikers();
+};
+
+// ─── PROJECTEN (admin) ────────────────────────────────────────────────────────
+async function renderProjecten() {
+  const snap = await getDocs(collection(db,'projects'));
+  document.getElementById('projecten-body').innerHTML = await Promise.all(snap.docs.map(async d => {
+    const p = { id:d.id,...d.data() };
+    const takenSnap = await getDocs(query(collection(db,'tasks'),where('projectId','==',p.id)));
+    return `<tr>
+      <td><strong>${p.naam}</strong></td>
+      <td>${p.beschrijving||'—'}</td>
+      <td>${(p.memberIds||[]).length}</td>
+      <td>${takenSnap.size}</td>
+      <td>
+        <button class="btn btn-sm btn-ghost" onclick="openEditProject('${p.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProject('${p.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  })).then(rows => rows.join('')) || '<tr><td colspan="5" class="empty-state">Geen projecten</td></tr>';
+}
+
+window.openNieuwProject = () => {
+  document.getElementById('proj-id').value = '';
+  document.getElementById('proj-naam').value = '';
+  document.getElementById('proj-beschrijving').value = '';
+  document.getElementById('modal-proj-title').textContent = 'Nieuw project';
+  openModal('modal-project');
+};
+
+window.openEditProject = async (id) => {
+  const snap = await getDoc(doc(db,'projects',id));
+  if (!snap.exists()) return;
+  const p = snap.data();
+  document.getElementById('proj-id').value = id;
+  document.getElementById('proj-naam').value = p.naam||'';
+  document.getElementById('proj-beschrijving').value = p.beschrijving||'';
+  document.getElementById('modal-proj-title').textContent = 'Project bewerken';
+  openModal('modal-project');
+};
+
+window.saveProject = async () => {
+  const id = document.getElementById('proj-id').value;
+  const naam = document.getElementById('proj-naam').value.trim();
+  if (!naam) { showToast('Naam is verplicht','error'); return; }
+  const data = { naam, beschrijving: document.getElementById('proj-beschrijving').value, updatedAt: serverTimestamp() };
+  if (id) { await updateDoc(doc(db,'projects',id),data); showToast('Project bijgewerkt','success'); }
+  else {
+    data.memberIds = [currentUser.uid];
+    data.createdAt = serverTimestamp();
+    await addDoc(collection(db,'projects'),data);
+    showToast('Project aangemaakt','success');
+  }
+  closeModal('modal-project');
+  renderProjecten();
+  loadProjects();
+};
+
+window.deleteProject = async (id) => {
+  if (!confirm('Project verwijderen? Dit verwijdert geen taken.')) return;
+  await deleteDoc(doc(db,'projects',id));
+  showToast('Project verwijderd','info');
+  renderProjecten(); loadProjects();
+};
+
+// ─── TOEGANG AANVRAGEN ────────────────────────────────────────────────────────
+window.vraagToegang = async () => {
+  const projectId = document.getElementById('toegang-project').value;
+  if (!projectId) { showToast('Kies een project','error'); return; }
+  const projSnap = await getDoc(doc(db,'projects',projectId));
+  const existing = await getDocs(query(collection(db,'accessRequests'),
+    where('userId','==',currentUser.uid), where('projectId','==',projectId), where('status','==','open')));
+  if (!existing.empty) { showToast('Je hebt al een openstaand verzoek voor dit project','info'); return; }
+  await addDoc(collection(db,'accessRequests'), {
+    userId: currentUser.uid,
+    projectId,
+    projectNaam: projSnap.data()?.naam || projectId,
+    status: 'open',
+    createdAt: serverTimestamp()
+  });
+  showToast('Toegang aangevraagd! Een admin keurt dit goed.','success');
+};
+
+// ─── PROFIEL ──────────────────────────────────────────────────────────────────
+function loadProfiel() {
+  if (!currentUserDoc) return;
+  document.getElementById('profiel-voornaam').value = currentUserDoc.firstname||'';
+  document.getElementById('profiel-achternaam').value = currentUserDoc.lastname||'';
+  document.getElementById('profiel-username').value = currentUserDoc.username||'';
+  document.getElementById('profiel-email').value = currentUserDoc.email||'';
+  document.getElementById('profiel-telefoon').value = currentUserDoc.phone||'';
+  const isAdmin = currentUserDoc.role==='admin';
+  document.getElementById('profiel-username').disabled = !isAdmin;
+}
+
+window.saveProfiel = async () => {
+  const data = {
+    firstname: document.getElementById('profiel-voornaam').value.trim(),
+    lastname: document.getElementById('profiel-achternaam').value.trim(),
+    phone: document.getElementById('profiel-telefoon').value.trim(),
+    updatedAt: serverTimestamp()
+  };
+  if (currentUserDoc.role==='admin') data.username = document.getElementById('profiel-username').value.trim();
+  await updateDoc(doc(db,'users',currentUser.uid), data);
+  await loadUserDoc();
+  updateTopbar();
+  showToast('Profiel opgeslagen','success');
+};
+
+window.changePassword = async () => {
+  const nieuw = document.getElementById('nieuw-ww').value;
+  const bevestig = document.getElementById('bevestig-ww').value;
+  if (nieuw.length < 6) { showToast('Wachtwoord minstens 6 tekens','error'); return; }
+  if (nieuw !== bevestig) { showToast('Wachtwoorden komen niet overeen','error'); return; }
+  try {
+    await updatePassword(auth.currentUser, nieuw);
+    showToast('Wachtwoord gewijzigd','success');
+    document.getElementById('nieuw-ww').value = '';
+    document.getElementById('bevestig-ww').value = '';
+  } catch(e) { showToast(e.message,'error'); }
+};
+
+// ─── PAGE ROUTING ─────────────────────────────────────────────────────────────
+window.showPage = (page) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById(`page-${page}`);
+  if (el) el.classList.add('active');
+  const nav = document.querySelector(`[data-page="${page}"]`);
+  if (nav) nav.classList.add('active');
+  if (page==='taken') renderTaken();
+  if (page==='mijn-taken') renderTaken();
+  if (page==='algemene-taken') renderTaken();
+  if (page==='materialen') renderMaterialen();
+  if (page==='locaties') renderLocaties();
+  if (page==='rapporten') renderRapporten();
+  if (page==='aanvragen') renderAanvragen();
+  if (page==='gebruikers') renderGebruikers();
+  if (page==='projecten') renderProjecten();
+  if (page==='profiel') loadProfiel();
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = { todo:'badge-todo', progress:'badge-progress', done:'badge-done', blocked:'badge-blocked' };
+  const labels = { todo:'To do', progress:'In uitvoering', done:'Gedaan', blocked:'Geblokkeerd' };
+  return `<span class="badge ${map[s]||'badge-todo'}">${labels[s]||s}</span>`;
+}
+function prioBadge(p) {
+  const map = { hoog:'badge-high', medium:'badge-medium', laag:'badge-low' };
+  return `<span class="badge ${map[p]||'badge-medium'}">${p||'medium'}</span>`;
+}
+function rolBadge(r) {
+  return `<span class="badge badge-${r||'uitvoerder'}">${r||'uitvoerder'}</span>`;
+}
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = ts.seconds ? new Date(ts.seconds*1000) : new Date(ts);
+  return d.toLocaleDateString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id==='modal-taak-detail' && chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+}
+window.closeModal = closeModal;
+function showToast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target===overlay) closeModal(overlay.id); });
+});
+</script>
+</body>
+</html>
